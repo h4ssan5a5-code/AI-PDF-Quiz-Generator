@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — QuizMind{% endblock %}
+
+{% block extra_head %}
+<style>
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1.75rem;
+    align-items: start;
+  }
+  @media (max-width: 640px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Profile card */
+  .profile-card {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+  }
+  .avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 1rem;
+  }
+  .profile-card h3 { color: var(--paper); margin-bottom: .15rem; font-size: 1.2rem; }
+  .profile-card .email { color: #a09880; font-size: .82rem; margin-bottom: 1.25rem; }
+  .stat-row { display: flex; gap: .75rem; }
+  .stat-box {
+    flex: 1;
+    background: rgba(255,255,255,.08);
+    border-radius: 8px;
+    padding: .75rem;
+    text-align: center;
+  }
+  .stat-box .num { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; color:var(--paper); }
+  .stat-box .lbl { font-size:.7rem; color:#a09880; text-transform:uppercase; letter-spacing:.06em; }
+
+  .profile-divider { border-color:rgba(255,255,255,.12); margin: 1.25rem 0; }
+  .profile-meta p  { font-size:.82rem; color:#a09880; margin-bottom:.5rem; }
+  .profile-meta span { color: var(--paper); font-weight:500; }
+
+  /* History table */
+  .history-table { width:100%; border-collapse: collapse; font-size:.875rem; }
+  .history-table th {
+    text-align: left;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    padding: .5rem .75rem;
+    border-bottom: 2px solid var(--border);
+  }
+  .history-table td {
+    padding: .75rem .75rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .history-table tr:last-child td { border-bottom: none; }
+  .history-table tr:hover td { background: var(--paper); }
+
+  .score-bar-wrap {
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .score-bar {
+    height: 6px; border-radius: 3px;
+    background: var(--border); width: 80px; overflow: hidden;
+  }
+  .score-bar-fill { height: 100%; border-radius: 3px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  .empty-icon { font-size: 3rem; margin-bottom: .75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <!-- Page title -->
+  <div style="margin-bottom:1.75rem;">
+    <h1>Dashboard</h1>
+    <p>Welcome back, {{ student.name.split()[0] }}! Here's your learning summary.</p>
+  </div>
+
+  <div class="dashboard-grid">
+
+    <!-- ── LEFT: Profile card ── -->
+    <div class="profile-card">
+      <div class="avatar">{{ student.name[0].upper() }}</div>
+      <h3>{{ student.name }}</h3>
+      <div class="email">{{ student.email }}</div>
+
+      <!-- Stats -->
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="num">{{ history | length }}</div>
+          <div class="lbl">Quizzes</div>
+        </div>
+        <div class="stat-box">
+          {% if history %}
+            {% set avg = (history | map(attribute='total_score') | sum) / (history | map(attribute='max_score') | sum) * 100 %}
+            <div class="num">{{ avg | round(0) | int }}%</div>
+          {% else %}
+            <div class="num">—</div>
+          {% endif %}
+          <div class="lbl">Avg Score</div>
+        </div>
+      </div>
+
+      <hr class="profile-divider">
+
+      <div class="profile-meta">
+        <p>Member since <span>{{ student.created[:10] }}</span></p>
+      </div>
+
+      <a href="/" class="btn btn-danger btn-sm" style="width:100%;text-align:center;display:block;margin-top:1rem;">
+        + Start New Quiz
+      </a>
+    </div>
+
+    <!-- ── RIGHT: History ── -->
+    <div class="card" style="padding: 1.75rem;">
+      <h2>Quiz History</h2>
+
+      {% if history %}
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>PDF</th>
+              <th>Score</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in history %}
+              {% set pct = (row.total_score / row.max_score * 100) | round(0) | int %}
+              {% set color = '#2d7a4f' if pct >= 70 else ('#b87c00' if pct >= 40 else '#c84b31') %}
+              <tr>
+                <td class="text-muted">{{ loop.index }}</td>
+                <td>{{ row.pdf_name or 'N/A' }}</td>
+                <td>
+                  <div class="score-bar-wrap">
+                    <div class="score-bar">
+                      <div class="score-bar-fill" style="width:{{ pct }}%;background:{{ color }};"></div>
+                    </div>
+                    <span style="font-weight:600;color:{{ color }};">
+                      {{ row.total_score }}/{{ row.max_score }}
+                    </span>
+                  </div>
+                </td>
+                <td class="text-muted">{{ row.created[:10] }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">📄</div>
+          <h3>No quizzes yet</h3>
+          <p>Upload a PDF to generate your first quiz.</p>
+          <a href="/" class="btn btn-primary mt-2">Start a Quiz →</a>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Results — QuizMind{% endblock %}
+
+{% block extra_head %}
+<style>
+  .score-hero {
+    text-align: center;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 14px;
+    padding: 2.5rem 2rem;
+    margin-bottom: 2rem;
+  }
+  .score-hero .big-score {
+    font-family: 'Syne', sans-serif;
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: .25rem;
+  }
+  .score-hero .sub { color: #a09880; font-size: .9rem; }
+
+  .result-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 3px 3px 0 var(--border);
+  }
+  .result-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: .6rem;
+  }
+  .result-q { font-weight: 600; font-size: .95rem; flex: 1; }
+  .score-pill {
+    white-space: nowrap;
+    padding: .25rem .7rem;
+    border-radius: 99px;
+    font-weight: 700;
+    font-size: .8rem;
+  }
+  .score-good { background:#d1f0e0; color:var(--green); }
+  .score-avg  { background:#fff3cd; color:#856404; }
+  .score-low  { background:#fce8e4; color:var(--accent); }
+
+  .ans-row { display: flex; gap: 1rem; font-size: .85rem; flex-wrap: wrap; margin-bottom: .4rem; }
+  .ans-label { font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: .72rem; color: var(--muted); }
+  .feedback-text { font-size: .85rem; color: var(--muted); font-style: italic; }
+
+  .actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <!-- Score hero -->
+  <div class="score-hero">
+    {% set pct = (total_score / max_score * 100) | round(0) | int %}
+    <div class="big-score">{{ total_score }}<span style="font-size:2rem;opacity:.5;">/{{ max_score }}</span></div>
+    <div style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:600;margin:.4rem 0;">
+      {% if pct >= 80 %}🎉 Excellent work!
+      {% elif pct >= 60 %}👍 Good effort!
+      {% elif pct >= 40 %}📚 Keep studying!
+      {% else %}💪 Don't give up!
+      {% endif %}
+    </div>
+    <div class="sub">You scored {{ pct }}% — results saved to your profile.</div>
+  </div>
+
+  <!-- Per-question results -->
+  <h2 style="margin-bottom:1rem;">Detailed Breakdown</h2>
+
+  {% for r in results %}
+    {% set pct_q = r.score * 10 %}
+    <div class="result-card">
+      <div class="result-top">
+        <div class="result-q">Q{{ loop.index }}: {{ r.question }}</div>
+        <span class="score-pill {% if r.score >= 7 %}score-good{% elif r.score >= 4 %}score-avg{% else %}score-low{% endif %}">
+          {{ r.score }}/10
+        </span>
+      </div>
+
+      <div class="ans-row">
+        <div>
+          <div class="ans-label">Your Answer</div>
+          <div>{{ r.user_answer or '—' }}</div>
+        </div>
+      </div>
+
+      {% if r.score < 7 %}
+      <div class="ans-row">
+        <div>
+          <div class="ans-label">Model Answer</div>
+          <div style="color:var(--green);">{{ r.correct_answer }}</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="feedback-text">💬 {{ r.feedback }}</div>
+    </div>
+  {% endfor %}
+
+  <div class="actions">
+    <a href="/" class="btn btn-primary">Try Another Quiz →</a>
+    <a href="/dashboard" class="btn btn-outline">View Dashboard</a>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}New Quiz — QuizMind{% endblock %}
+
+{% block extra_head %}
+<style>
+  .upload-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 65px);
+    padding: 2rem 1rem;
+  }
+  .upload-card {
+    width: 100%;
+    max-width: 520px;
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 14px;
+    padding: 2.5rem;
+    box-shadow: 7px 7px 0 var(--ink);
+    animation: pop .35s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes pop {
+    from { opacity:0; transform:translateY(20px) scale(.97); }
+    to   { opacity:1; transform:none; }
+  }
+  .tag {
+    font-family: 'Syne', sans-serif;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .5rem;
+  }
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+    margin-top: 1.25rem;
+  }
+  .dropzone:hover { border-color: var(--ink); background: var(--paper); }
+  .dropzone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+  }
+  .dz-icon { font-size: 2.25rem; margin-bottom: .5rem; }
+  .dz-text { font-weight: 600; font-size: .95rem; }
+  .dz-sub  { font-size: .8rem; color: var(--muted); margin-top: .2rem; }
+  #file-name { font-size:.82rem; color:var(--green); margin-top:.6rem; font-weight:600; }
+
+  .loader { display:none; text-align:center; padding:1rem 0; }
+  .loader .spinner {
+    width:32px; height:32px;
+    border:3px solid var(--border);
+    border-top-color:var(--ink);
+    border-radius:50%;
+    animation: spin .7s linear infinite;
+    margin: 0 auto .6rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-wrap">
+  <div class="upload-card">
+    <div class="tag">AI Quiz Generator</div>
+    <h2>Upload a PDF</h2>
+    <p class="text-muted">We'll extract the content and generate 10 questions for you to answer.</p>
+
+    <form method="POST" enctype="multipart/form-data" id="upload-form">
+      <div class="dropzone" id="dropzone">
+        <input type="file" name="pdf" id="pdf-input" accept=".pdf" required />
+        <div class="dz-icon">📑</div>
+        <div class="dz-text">Click or drag a PDF here</div>
+        <div class="dz-sub">Only PDF files are supported</div>
+        <div id="file-name"></div>
+      </div>
+
+      <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <div class="text-muted" style="font-size:.875rem;">Generating questions… this may take a moment.</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary mt-3" style="width:100%;" id="submit-btn">
+        Generate Questions →
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const input = document.getElementById('pdf-input');
+  const label = document.getElementById('file-name');
+  const form  = document.getElementById('upload-form');
+  const loader = document.getElementById('loader');
+  const btn   = document.getElementById('submit-btn');
+
+  input.addEventListener('change', () => {
+    if (input.files.length) {
+      label.textContent = '✓ ' + input.files[0].name;
+    }
+  });
+
+  form.addEventListener('submit', () => {
+    loader.style.display = 'block';
+    btn.disabled = true;
+    btn.textContent = 'Processing…';
+  });
+</script>
+{% endblock %}

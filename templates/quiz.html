@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Quiz — QuizMind{% endblock %}
+
+{% block extra_head %}
+<style>
+  .progress-bar-wrap {
+    background: var(--border);
+    border-radius: 99px;
+    height: 6px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    width: 0%;
+    transition: width .4s ease;
+  }
+
+  .q-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 3px 3px 0 var(--border);
+  }
+  .q-num {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--accent);
+    margin-bottom: .4rem;
+  }
+  .q-text { font-weight: 600; font-size: 1rem; margin-bottom: .75rem; }
+  .submit-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--paper);
+    border-top: 2px solid var(--border);
+    padding: 1rem 0;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .submit-bar .answered {
+    font-size: .85rem;
+    color: var(--muted);
+    flex: 1;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Answer the Questions</h1>
+  <p class="text-muted mt-1" style="margin-bottom:1.5rem;">
+    {{ qa_pairs | length }} questions generated. Write your best answers!
+  </p>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress"></div>
+  </div>
+
+  <form method="POST" action="/submit" id="quiz-form">
+    {% for qa in qa_pairs %}
+      <div class="q-card">
+        <div class="q-num">Question {{ loop.index }}</div>
+        <div class="q-text">{{ qa.question }}</div>
+        <textarea
+          name="q{{ loop.index0 }}"
+          rows="3"
+          placeholder="Your answer…"
+          required
+          data-idx="{{ loop.index0 }}"
+        ></textarea>
+        <input type="hidden" name="question{{ loop.index0 }}" value="{{ qa.question }}">
+        <input type="hidden" name="answer{{ loop.index0 }}"   value="{{ qa.answer }}">
+      </div>
+    {% endfor %}
+
+    <div class="submit-bar">
+      <span class="answered" id="answered-count">0 / {{ qa_pairs | length }} answered</span>
+      <button type="submit" class="btn btn-primary" id="submit-btn">
+        Submit Answers →
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+  const textareas = document.querySelectorAll('textarea');
+  const total = textareas.length;
+  const countEl = document.getElementById('answered-count');
+  const progress = document.getElementById('progress');
+
+  function update() {
+    let filled = 0;
+    textareas.forEach(t => { if (t.value.trim()) filled++; });
+    countEl.textContent = filled + ' / ' + total + ' answered';
+    progress.style.width = (filled / total * 100) + '%';
+  }
+
+  textareas.forEach(t => t.addEventListener('input', update));
+
+  document.getElementById('quiz-form').addEventListener('submit', function() {
+    document.getElementById('submit-btn').textContent = 'Evaluating…';
+    document.getElementById('submit-btn').disabled = true;
+  });
+</script>
+{% endblock %}
